@@ -1082,8 +1082,3 @@ detect_files = []
 detect_folders = []
 
 [custom]
-
-[gcloud]
-disabled = true
-[aws]
-disabled = true
