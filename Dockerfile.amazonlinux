@@ -1,0 +1,28 @@
+FROM amazonlinux:2023
+
+# Install prerequisites (curl-minimal is already in base image)
+RUN dnf install -y \
+    git \
+    sudo \
+    glibc-langpack-en \
+    && dnf clean all
+
+# Set up locale
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Create a non-root user (many tools don't like running as root)
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+USER testuser
+WORKDIR /home/testuser
+
+# Copy dotfiles to home directory
+COPY --chown=testuser:testuser . /home/testuser/
+
+# Run bootstrap
+RUN bash /home/testuser/.config/yadm/bootstrap
+
+# Default to zsh
+CMD ["zsh"]

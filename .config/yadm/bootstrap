@@ -13,6 +13,82 @@ if [ "$system_type" = "Darwin" ]; then
     fi
     echo "Updating homebrew bundles"
     cd "$HOME" && brew doctor && brew bundle
+elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y $(cat Yumfile)
+
+    # Install Node.js via NodeSource (LTS version)
+    if ! command -v node >/dev/null 2>&1; then
+        curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
+        sudo dnf install -y nodejs
+    fi
+
+    # Install Neovim from GitHub releases (latest stable)
+    if ! command -v nvim >/dev/null 2>&1; then
+        arch=$(uname -m)
+        if [ "$arch" = "x86_64" ]; then
+            nvim_arch="x86_64"
+        elif [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ]; then
+            nvim_arch="arm64"
+        fi
+        curl -fLo /tmp/nvim.tar.gz "https://github.com/neovim/neovim/releases/download/stable/nvim-linux-${nvim_arch}.tar.gz"
+        sudo tar -xzf /tmp/nvim.tar.gz -C /opt
+        sudo ln -sf /opt/nvim-linux-${nvim_arch}/bin/nvim /usr/local/bin/nvim
+        rm /tmp/nvim.tar.gz
+    fi
+
+    # Install antidote (zsh plugin manager)
+    if [ ! -d "$HOME/.antidote" ]; then
+        git clone --depth=1 https://github.com/mattmc3/antidote.git "$HOME/.antidote"
+    fi
+
+    # Install pyenv
+    if [ ! -d "$HOME/.pyenv" ]; then
+        git clone https://github.com/pyenv/pyenv.git "$HOME/.pyenv"
+    fi
+
+    # Install rbenv and ruby-build
+    if [ ! -d "$HOME/.rbenv" ]; then
+        git clone https://github.com/rbenv/rbenv.git "$HOME/.rbenv"
+        git clone https://github.com/rbenv/ruby-build.git "$HOME/.rbenv/plugins/ruby-build"
+    fi
+
+    # Install starship prompt
+    if ! command -v starship >/dev/null 2>&1; then
+        curl -sS https://starship.rs/install.sh | sh -s -- -y
+    fi
+
+    # Install fzf
+    if ! command -v fzf >/dev/null 2>&1; then
+        git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
+        "$HOME/.fzf/install" --bin
+        sudo ln -sf "$HOME/.fzf/bin/fzf" /usr/local/bin/fzf
+    fi
+
+    # Install direnv
+    if ! command -v direnv >/dev/null 2>&1; then
+        export bin_path=/usr/local/bin
+        curl -sfL https://direnv.net/install.sh | sudo -E bash
+    fi
+
+    # Install lsd (ls replacement) from tarball
+    if ! command -v lsd >/dev/null 2>&1; then
+        arch=$(uname -m)
+        if [ "$arch" = "x86_64" ]; then
+            lsd_arch="x86_64-unknown-linux-gnu"
+        elif [ "$arch" = "aarch64" ]; then
+            lsd_arch="aarch64-unknown-linux-gnu"
+        fi
+        lsd_version=$(curl -s https://api.github.com/repos/lsd-rs/lsd/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+        curl -fLo /tmp/lsd.tar.gz "https://github.com/lsd-rs/lsd/releases/download/${lsd_version}/lsd-${lsd_version}-${lsd_arch}.tar.gz"
+        tar -xzf /tmp/lsd.tar.gz -C /tmp
+        sudo mv /tmp/lsd-${lsd_version}-${lsd_arch}/lsd /usr/local/bin/
+        rm -rf /tmp/lsd.tar.gz /tmp/lsd-${lsd_version}-${lsd_arch}
+    fi
+
+    # LSP servers
+    sudo npm install -g pyright typescript typescript-language-server bash-language-server tree-sitter-cli
+    command -v gem >/dev/null 2>&1 && sudo gem install solargraph
+    command -v go >/dev/null 2>&1 && sudo GOBIN=/usr/local/bin go install golang.org/x/tools/gopls@latest
 else
     sudo apt-get update
     sudo apt-get install -y $(cat Aptfile)
@@ -86,6 +162,9 @@ clone_plugin "tpope/vim-fugitive"
 if [ "$system_type" = "Darwin" ]; then
     python3 -m pip install --user --upgrade pip setuptools wheel pynvim
     npm install -g neovim diff-so-fancy
+elif command -v dnf >/dev/null 2>&1; then
+    python3 -m pip install --user pynvim
+    sudo npm install -g neovim diff-so-fancy
 else
     # Use pip for pynvim (avoids apt pulling in old neovim as dependency)
     python3 -m pip install --break-system-packages --user pynvim
@@ -127,5 +206,5 @@ case $- in
 esac
 
 # Clean up non-dotfiles that shouldn't remain in $HOME
-rm -f "$HOME/Dockerfile" "$HOME/.dockerignore" "$HOME/README.md" "$HOME/Aptfile" "$HOME/Brewfile"
+rm -f "$HOME/Dockerfile" "$HOME/Dockerfile.amazonlinux" "$HOME/.dockerignore" "$HOME/README.md" "$HOME/Aptfile" "$HOME/Brewfile" "$HOME/Yumfile"
 rm -rf "$HOME/.github"

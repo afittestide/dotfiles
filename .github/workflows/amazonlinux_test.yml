@@ -1,0 +1,17 @@
+name: amazonlinux_test
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Build container
+      run: docker build -t dotfiles-amazonlinux -f Dockerfile.amazonlinux .
+
+    - name: Run healthcheck
+      run: |
+        docker run --rm dotfiles-amazonlinux bash -c '
+          nvim --headless -c "checkhealth" -c "qa!" 2>&1
+        '
