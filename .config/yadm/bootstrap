@@ -122,6 +122,10 @@ case $- in
   *) echo "Running in a script, not changing default shell"
      ;;
   *i*) echo ">>> Please enter you password to make zsh your default shell."
-    chsh -s "$(command -v zsh)" || echo "*** Failed to chsh, please run it manually"  
-    ;;  
+    chsh -s "$(command -v zsh)" || echo "*** Failed to chsh, please run it manually"
+    ;;
 esac
+
+# Clean up non-dotfiles that shouldn't remain in $HOME
+rm -f "$HOME/Dockerfile" "$HOME/.dockerignore" "$HOME/README.md" "$HOME/Aptfile" "$HOME/Brewfile"
+rm -rf "$HOME/.github"
