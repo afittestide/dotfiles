@@ -1,73 +1,92 @@
 # dotfiles
 
-Dotfiles are the threads that hold the IDE together. Each tool has a configuration file - a dotfile. For the shell it's (.zshrc) for neovim it's the more modern (.config/nvim/init.vim) . 
-
-To keep track of the dotfiles and bootstrap the enviornment we use "yet another dotfiles manager". 
+Dotfiles managed with [yadm](https://yadm.io) - yet another dotfiles manager.
 
 ## Installation
 
-You first need to get yadm - yet another dotffile management. In OSX it's `brew
-install yadm` and on Ubuntu it's `apt install yadm`.
+Install yadm:
+- macOS: `brew install yadm`
+- Ubuntu: `apt install yadm`
 
-Once you have yadm, fork this repo and then `yadm clone <fork's url>`.
-It will ask you whether to run the bootstrap file. Answer yes and it'll be installed 
-and configured for you.
+Then clone and bootstrap:
+```bash
+yadm clone https://github.com/afittestide/dotfiles
+```
 
-If it fails, DON'T PANIC. 
-Please copy the screen output and paste into an issue and mark it as a bug and we'll help.
+Answer yes when asked to run bootstrap. It will install and configure everything.
 
-## Batteries Included
+## What's Included
 
-* zsh - a popular shell
-* tmux - a terminal multiplexer: lets you switch easily between several
-  programs in one terminal
-* neovim - The 5th incranation of 
-[qed](https://twobithistory.org/2018/08/05/where-vim-came-from.html) the
-fittest editor.
-* [direnv](https://direnv.net/) - shell extension for loading local env vars
-* [antibody](http://getantibody.github.io/) - zsh plugin manager
-* [tpm](https://github.com/tmux-plugins/tpm) - tmux plugin manager
-* [fugitive](https://github.com/tpope/vim-fugitive) - a git plugin so good it should be illegal
-* [liquid prompt](https://github.ocm/nojhan/liquidprompt) - the best prompt, ever
-* [alias-tips](https://github.com/djui/alias-tips) - reminding you of aliases
-* [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-* [zsh-completions](https://github.com/zsh-users/zsh-completions) - for missing completions
-* [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) 
-seamless navigation between 
-* [tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect) - store & restore complete state
+### Shell
+- **zsh** - shell with plugins via [antidote](https://getantibody.github.io/)
+- **starship** - cross-shell prompt
+- **direnv** - directory-specific environment variables
+- **fzf** - fuzzy finder
 
+### Terminal
+- **tmux** - terminal multiplexer with [tpm](https://github.com/tmux-plugins/tpm)
+- **vim-tmux-navigator** - seamless navigation between vim and tmux panes
+- **tmux-resurrect** - persist and restore tmux sessions
 
-## Aliases
+### Neovim
+Modern Lua-based config using native Neovim features:
 
-* `hi` - to print last 100 commands
-* `vi` - for neovim
-* `lg` - concise git log & tree
+**Plugins** (via native packages):
+- **telescope.nvim** - fuzzy finder
+- **nvim-treesitter** - syntax highlighting
+- **vim-fugitive** - git integration
 
-Using ^ for ctrl:
+**LSP** (via native `vim.lsp`):
+- Python (pyright)
+- Ruby (solargraph)
+- Go (gopls)
+- TypeScript (ts_ls)
+- Bash (bashls)
 
-## Basic Keystrokes
+### Keymaps
 
-"^" is for CTRL:
+Leader is `<Space>`
 
-### Splitting windows:
+| Key | Action |
+|-----|--------|
+| `<C-p>` | Find git files |
+| `<leader>ff` | Find files |
+| `<leader>fg` | Live grep |
+| `<leader>fb` | Buffers |
+| `<leader>fh` | Help tags |
+| `<leader>gs` | Git status (fugitive) |
+| `gd` | Go to definition |
+| `gr` | Find references |
+| `K` | Hover docs |
+| `<leader>rn` | Rename symbol |
+| `<leader>ca` | Code action |
 
-    * ^a | - split verticlly  
-    * ^a - - split verticlly  
-    * ^a x - kill pane 
+### Tmux
 
-### Pane Navigation:
+Prefix is `<C-a>`
 
-The vim-tmux-navigator plugin let's us move seamlessly between vim and tmux panes.
+| Key | Action |
+|-----|--------|
+| `<prefix> \|` | Split vertically |
+| `<prefix> -` | Split horizontally |
+| `<prefix> x` | Kill pane |
+| `<C-h/j/k/l>` | Navigate panes (works in vim too) |
+| `<prefix> <C-s>` | Save session |
+| `<prefix> <C-r>` | Restore session |
 
-    * ^a ^h - move one pane right
-    * ^a ^l - move one pane left
-    * ^a ^j - move one pane down
-    * ^a ^k - move one pane up
+## Testing
 
-### State
+Build and test with Docker:
+```bash
+docker build -t dotfiles-test .
+docker run -it dotfiles-test
+```
 
-tmux-resurrect let's us store and restore all the panes. As long as you remember to save occasionaly, 
+Run healthcheck:
+```bash
+docker run --rm dotfiles-test nvim --headless -c "checkhealth" -c "qa!"
+```
 
-    * ^a ^s - Saving current windows and panes
-    * ^a ^r - Restore the last saved windows and panes
+## Troubleshooting
 
+If bootstrap fails, please open an issue with the error output.
