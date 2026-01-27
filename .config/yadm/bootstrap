@@ -9,38 +9,100 @@ system_type=$(uname -s)
 if [ "$system_type" = "Darwin" ]; then
     if ! command -v brew >/dev/null 2>&1; then
         echo "Installing homebrew"
-        /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
     echo "Updating homebrew bundles"
     cd "$HOME" && brew doctor && brew bundle
 else
-    # [ ! -z "$sudo" ] && echo "Updating system package requires you pass"
-    sudo apt-get update 
-    sudo apt-get install -y `cat Aptfile`
-    curl https://nodejs.org/dist/v12.16.1/node-v12.16.1-linux-x64.tar.xz | tar x
-    mv node-v12.16.1-linux-x64 node
-    sudo curl -sfLo /usr/local/bin/nvim \
-        https://github.com/neovim/neovim/releases/download/v0.4.3/nvim.appimage
-    sudo chmod +x /usr/local/bin/nvim
-    if ! command -v antibody >/dev/null 2>&1; then
-        curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
+    sudo apt-get update
+    sudo apt-get install -y $(cat Aptfile)
+
+    # Install Node.js via NodeSource (LTS version)
+    if ! command -v node >/dev/null 2>&1; then
+        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+        sudo apt-get install -y nodejs
     fi
+
+    # Install Neovim from GitHub releases (latest stable)
+    if ! command -v nvim >/dev/null 2>&1; then
+        arch=$(uname -m)
+        if [ "$arch" = "x86_64" ]; then
+            nvim_arch="x86_64"
+        elif [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ]; then
+            nvim_arch="arm64"
+        fi
+        curl -fLo /tmp/nvim.tar.gz "https://github.com/neovim/neovim/releases/download/stable/nvim-linux-${nvim_arch}.tar.gz"
+        sudo tar -xzf /tmp/nvim.tar.gz -C /opt
+        sudo ln -sf /opt/nvim-linux-${nvim_arch}/bin/nvim /usr/local/bin/nvim
+        rm /tmp/nvim.tar.gz
+    fi
+
+    # Install antidote (zsh plugin manager, antibody successor)
+    if [ ! -d "$HOME/.antidote" ]; then
+        git clone --depth=1 https://github.com/mattmc3/antidote.git "$HOME/.antidote"
+    fi
+
+    # Install pyenv
+    if [ ! -d "$HOME/.pyenv" ]; then
+        git clone https://github.com/pyenv/pyenv.git "$HOME/.pyenv"
+    fi
+
+    # Install rbenv and ruby-build
+    if [ ! -d "$HOME/.rbenv" ]; then
+        git clone https://github.com/rbenv/rbenv.git "$HOME/.rbenv"
+        git clone https://github.com/rbenv/ruby-build.git "$HOME/.rbenv/plugins/ruby-build"
+    fi
+
+    # Install starship prompt
+    if ! command -v starship >/dev/null 2>&1; then
+        curl -sS https://starship.rs/install.sh | sh -s -- -y
+    fi
+
+    # LSP servers
+    sudo npm install -g pyright typescript typescript-language-server bash-language-server tree-sitter-cli
+    sudo gem install solargraph
+    sudo GOBIN=/usr/local/bin /usr/bin/go install golang.org/x/tools/gopls@latest
 fi
-# neovim's plug manager
-if [ ! -f "$HOME/.local/share/nvim/site/autoload/plug.vim" ]; then
-	curl -sfLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs \
-		https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+# neovim native packages
+PACK_DIR="$HOME/.local/share/nvim/site/pack/plugins/start"
+mkdir -p "$PACK_DIR"
+
+clone_plugin() {
+    local repo=$1
+    local name=$(basename "$repo" .git)
+    if [ ! -d "$PACK_DIR/$name" ]; then
+        git clone --depth 1 "https://github.com/$repo.git" "$PACK_DIR/$name"
+    else
+        git -C "$PACK_DIR/$name" pull --ff-only 2>/dev/null || true
+    fi
+}
+
+clone_plugin "nvim-lua/plenary.nvim"
+clone_plugin "nvim-telescope/telescope.nvim"
+clone_plugin "nvim-treesitter/nvim-treesitter"
+clone_plugin "tpope/vim-fugitive"
+
+# neovim dependencies
+if [ "$system_type" = "Darwin" ]; then
+    python3 -m pip install --user --upgrade pip setuptools wheel pynvim
+    npm install -g neovim diff-so-fancy
+else
+    # Use pip for pynvim (avoids apt pulling in old neovim as dependency)
+    python3 -m pip install --break-system-packages --user pynvim
+    sudo npm install -g neovim diff-so-fancy
 fi
 
-# neovim's python libraries
-python3 -m pip install --user --upgrade pip setuptools wheel
-python3 -m pip install --user --upgrade pynvim
-python2 -m pip install --user --upgrade pip setuptools wheel
-python2 -m pip install --user --upgrade pynvim
-sudo npm install -g neovim
+# Configure git to use diff-so-fancy
+git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
+git config --global interactive.diffFilter "diff-so-fancy --patch"
+git config --global color.ui true
+git config --global color.diff-highlight.oldNormal "red bold"
+git config --global color.diff-highlight.oldHighlight "red bold 52"
+git config --global color.diff-highlight.newNormal "green bold"
+git config --global color.diff-highlight.newHighlight "green bold 22"
 
-# Running neovim to update the plugins
-nvim '+PlugUpdate' '+PlugClean!' '+PlugUpdate' '+qall'
+# Install treesitter parsers
+nvim --headless -c "lua require('nvim-treesitter').install({'lua', 'vim', 'vimdoc', 'javascript', 'typescript', 'python', 'go', 'bash', 'json', 'yaml', 'markdown'})" -c "sleep 30" -c "qa" 2>/dev/null || true
 
 # Bootstrap tmux
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then

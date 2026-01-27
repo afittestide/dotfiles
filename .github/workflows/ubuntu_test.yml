@@ -1,11 +1,17 @@
-name: unbuntu_test
+name: ubuntu_test
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Get yadm and install the files
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Build container
+      run: docker build -t dotfiles-test .
+
+    - name: Run healthcheck
       run: |
-        sudo apt-get install git yadm
-        yadm clone --bootstrap https://github.com/$GITHUB_REPOSITORY
-        nvim -es +checkhealth
+        docker run --rm dotfiles-test bash -c '
+          nvim --headless -c "checkhealth" -c "qa!" 2>&1
+        '

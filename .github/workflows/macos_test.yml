@@ -1,13 +1,21 @@
-name: darwin_test
+name: macos_test
 on: [push]
 jobs:
   build:
     runs-on: macos-latest
     steps:
-    - name: Get yadm and install the files
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install yadm
+      run: brew install yadm
+
+    - name: Setup dotfiles
       run: |
-        brew install git yadm
-        yadm clone --no-bootstrap https://github.com/$GITHUB_REPOSITORY
+        # Copy files to home directory (simulating yadm clone)
+        cp -r . ~/
+        # Run bootstrap
         ~/.config/yadm/bootstrap
-        yadm list
-        nvim -es +checkhealth
+
+    - name: Run healthcheck
+      run: nvim --headless -c "checkhealth" -c "qa!"

@@ -1,4 +1,14 @@
-djui/alias-tips
+# Completions and suggestions
 zsh-users/zsh-completions
+zsh-users/zsh-autosuggestions
+
+# Developer utilities
+MichaelAquilina/zsh-you-should-use
+agkozak/zsh-z
+hlissner/zsh-autopair
+
+# Prompt
 nojhan/liquidprompt
+
+# Syntax highlighting (must be last)
 zsh-users/zsh-syntax-highlighting
