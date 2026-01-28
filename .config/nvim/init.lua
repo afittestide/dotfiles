@@ -18,5 +18,19 @@ opt.scrolloff = 8
 opt.signcolumn = "yes"
 opt.updatetime = 250
 
+-- Clipboard configuration
+vim.g.clipboard = {
+    name = "webexec",
+    copy = {
+        ["+"] = "webexec copy",
+        ["*"] = "webexec copy",
+    },
+    paste = {
+        ["+"] = "webexec paste",
+        ["*"] = "webexec paste",
+    },
+    cache_enabled = 0,
+}
+
 -- Load keymaps
 require("config.keymaps")
