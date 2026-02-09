@@ -35,6 +35,7 @@ brew 'pyenv'
 brew 'rbenv'
 brew 'ruby-build'
 brew 'starship'
+brew 'just'
 
 # LSP servers
 brew 'pyright'

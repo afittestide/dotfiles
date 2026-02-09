@@ -85,6 +85,11 @@ elif command -v dnf >/dev/null 2>&1; then
         rm -rf /tmp/lsd.tar.gz /tmp/lsd-${lsd_version}-${lsd_arch}
     fi
 
+    # Install just (command runner)
+    if ! command -v just >/dev/null 2>&1; then
+        curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | sudo bash -s -- --to /usr/local/bin
+    fi
+
     # LSP servers
     sudo npm install -g pyright typescript typescript-language-server bash-language-server tree-sitter-cli
     command -v gem >/dev/null 2>&1 && sudo gem install solargraph
@@ -132,6 +137,11 @@ else
     # Install starship prompt
     if ! command -v starship >/dev/null 2>&1; then
         curl -sS https://starship.rs/install.sh | sh -s -- -y
+    fi
+
+    # Install just (command runner)
+    if ! command -v just >/dev/null 2>&1; then
+        curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | sudo bash -s -- --to /usr/local/bin
     fi
 
     # LSP servers

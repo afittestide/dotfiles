@@ -18,6 +18,7 @@ xmlsec1-devel
 libffi-devel
 libyaml-devel
 zsh
+direnv
 golang
 ruby
 ruby-devel
@@ -25,3 +26,4 @@ tar
 gzip
 findutils
 which
+just
