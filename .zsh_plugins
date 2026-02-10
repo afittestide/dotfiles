@@ -6,9 +6,5 @@ zsh-users/zsh-autosuggestions
 MichaelAquilina/zsh-you-should-use
 agkozak/zsh-z
 hlissner/zsh-autopair
-
-# Prompt
-nojhan/liquidprompt
-
 # Syntax highlighting (must be last)
 zsh-users/zsh-syntax-highlighting
