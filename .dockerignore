@@ -1,7 +1,0 @@
-.git
-*.swp
-*.swo
-*~
-.DS_Store
-Dockerfile
-.dockerignore

@@ -1,10 +1,5 @@
-# Completions and suggestions
+mafredri/zsh-async
+djui/alias-tips
+sindresorhus/pure
 zsh-users/zsh-completions
-zsh-users/zsh-autosuggestions
-
-# Developer utilities
-MichaelAquilina/zsh-you-should-use
-agkozak/zsh-z
-hlissner/zsh-autopair
-# Syntax highlighting (must be last)
 zsh-users/zsh-syntax-highlighting

@@ -9,191 +9,55 @@ system_type=$(uname -s)
 if [ "$system_type" = "Darwin" ]; then
     if ! command -v brew >/dev/null 2>&1; then
         echo "Installing homebrew"
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     fi
     echo "Updating homebrew bundles"
     cd "$HOME" && brew doctor && brew bundle
-elif command -v dnf >/dev/null 2>&1; then
-    sudo dnf install -y $(cat Yumfile)
-
-    # Install Node.js via NodeSource (LTS version)
-    if ! command -v node >/dev/null 2>&1; then
-        curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
-        sudo dnf install -y nodejs
-    fi
-
-    # Install Neovim from GitHub releases (latest stable)
-    if ! command -v nvim >/dev/null 2>&1; then
-        arch=$(uname -m)
-        if [ "$arch" = "x86_64" ]; then
-            nvim_arch="x86_64"
-        elif [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ]; then
-            nvim_arch="arm64"
-        fi
-        curl -fLo /tmp/nvim.tar.gz "https://github.com/neovim/neovim/releases/download/stable/nvim-linux-${nvim_arch}.tar.gz"
-        sudo tar -xzf /tmp/nvim.tar.gz -C /opt
-        sudo ln -sf /opt/nvim-linux-${nvim_arch}/bin/nvim /usr/local/bin/nvim
-        rm /tmp/nvim.tar.gz
-    fi
-
-    # Install antidote (zsh plugin manager)
-    if [ ! -d "$HOME/.antidote" ]; then
-        git clone --depth=1 https://github.com/mattmc3/antidote.git "$HOME/.antidote"
-    fi
-
-    # Install pyenv
-    if [ ! -d "$HOME/.pyenv" ]; then
-        git clone https://github.com/pyenv/pyenv.git "$HOME/.pyenv"
-    fi
-
-    # Install rbenv and ruby-build
-    if [ ! -d "$HOME/.rbenv" ]; then
-        git clone https://github.com/rbenv/rbenv.git "$HOME/.rbenv"
-        git clone https://github.com/rbenv/ruby-build.git "$HOME/.rbenv/plugins/ruby-build"
-    fi
-
-    # Install starship prompt
-    if ! command -v starship >/dev/null 2>&1; then
-        curl -sS https://starship.rs/install.sh | sh -s -- -y
-    fi
-
-    # Install fzf
-    if ! command -v fzf >/dev/null 2>&1; then
-        git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
-        "$HOME/.fzf/install" --bin
-        sudo ln -sf "$HOME/.fzf/bin/fzf" /usr/local/bin/fzf
-    fi
-
-    # Install direnv
-    if ! command -v direnv >/dev/null 2>&1; then
-        export bin_path=/usr/local/bin
-        curl -sfL https://direnv.net/install.sh | sudo -E bash
-    fi
-
-    # Install lsd (ls replacement) from tarball
-    if ! command -v lsd >/dev/null 2>&1; then
-        arch=$(uname -m)
-        if [ "$arch" = "x86_64" ]; then
-            lsd_arch="x86_64-unknown-linux-gnu"
-        elif [ "$arch" = "aarch64" ]; then
-            lsd_arch="aarch64-unknown-linux-gnu"
-        fi
-        lsd_version=$(curl -s https://api.github.com/repos/lsd-rs/lsd/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
-        curl -fLo /tmp/lsd.tar.gz "https://github.com/lsd-rs/lsd/releases/download/${lsd_version}/lsd-${lsd_version}-${lsd_arch}.tar.gz"
-        tar -xzf /tmp/lsd.tar.gz -C /tmp
-        sudo mv /tmp/lsd-${lsd_version}-${lsd_arch}/lsd /usr/local/bin/
-        rm -rf /tmp/lsd.tar.gz /tmp/lsd-${lsd_version}-${lsd_arch}
-    fi
-
-    # Install just (command runner)
-    if ! command -v just >/dev/null 2>&1; then
-        curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | sudo bash -s -- --to /usr/local/bin
-    fi
-
-    # LSP servers
-    sudo npm install -g pyright typescript typescript-language-server bash-language-server tree-sitter-cli
-    command -v gem >/dev/null 2>&1 && sudo gem install solargraph
-    command -v go >/dev/null 2>&1 && sudo GOBIN=/usr/local/bin go install golang.org/x/tools/gopls@latest
 else
-    sudo apt-get update
-    sudo apt-get install -y $(cat Aptfile)
-
-    # Install Node.js via NodeSource (LTS version)
-    if ! command -v node >/dev/null 2>&1; then
-        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-        sudo apt-get install -y nodejs
-    fi
-
-    # Install Neovim from GitHub releases (latest stable)
-    if ! command -v nvim >/dev/null 2>&1; then
-        arch=$(uname -m)
-        if [ "$arch" = "x86_64" ]; then
-            nvim_arch="x86_64"
-        elif [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ]; then
-            nvim_arch="arm64"
-        fi
-        curl -fLo /tmp/nvim.tar.gz "https://github.com/neovim/neovim/releases/download/stable/nvim-linux-${nvim_arch}.tar.gz"
-        sudo tar -xzf /tmp/nvim.tar.gz -C /opt
-        sudo ln -sf /opt/nvim-linux-${nvim_arch}/bin/nvim /usr/local/bin/nvim
-        rm /tmp/nvim.tar.gz
-    fi
-
-    # Install antidote (zsh plugin manager, antibody successor)
-    if [ ! -d "$HOME/.antidote" ]; then
-        git clone --depth=1 https://github.com/mattmc3/antidote.git "$HOME/.antidote"
-    fi
-
-    # Install pyenv
-    if [ ! -d "$HOME/.pyenv" ]; then
-        git clone https://github.com/pyenv/pyenv.git "$HOME/.pyenv"
-    fi
-
-    # Install rbenv and ruby-build
-    if [ ! -d "$HOME/.rbenv" ]; then
-        git clone https://github.com/rbenv/rbenv.git "$HOME/.rbenv"
-        git clone https://github.com/rbenv/ruby-build.git "$HOME/.rbenv/plugins/ruby-build"
-    fi
-
-    # Install starship prompt
-    if ! command -v starship >/dev/null 2>&1; then
-        curl -sS https://starship.rs/install.sh | sh -s -- -y
-    fi
-
-    # Install just (command runner)
-    if ! command -v just >/dev/null 2>&1; then
-        curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | sudo bash -s -- --to /usr/local/bin
-    fi
-
-    # LSP servers
-    sudo npm install -g pyright typescript typescript-language-server bash-language-server tree-sitter-cli
-    sudo gem install solargraph
-    sudo GOBIN=/usr/local/bin /usr/bin/go install golang.org/x/tools/gopls@latest
+    # [ ! -z "$sudo" ] && echo "Updating system package requires you pass"
+    sudo apt-get update 
+    sudo apt-get install -y `cat $HOME/Aptfile`
+    sudo curl -sfLo /usr/local/bin/nvim \
+        https://github.com/neovim/neovim/releases/download/v0.10.2/nvim.appimage
+    sudo chmod +x /usr/local/bin/nvim
+    curl https://nodejs.org/dist/v12.16.1/node-v12.16.1-linux-x64.tar.xz | tar x
+    mv node-v12.16.1-linux-x64 /usr/local/bin/node
+    sudo snap install lsd
+    nix-shell -p tlrc
 fi
-# neovim native packages
-PACK_DIR="$HOME/.local/share/nvim/site/pack/plugins/start"
-mkdir -p "$PACK_DIR"
-
-clone_plugin() {
-    local repo=$1
-    local name=$(basename "$repo" .git)
-    if [ ! -d "$PACK_DIR/$name" ]; then
-        git clone --depth 1 "https://github.com/$repo.git" "$PACK_DIR/$name"
-    else
-        git -C "$PACK_DIR/$name" pull --ff-only 2>/dev/null || true
-    fi
-}
-
-clone_plugin "nvim-lua/plenary.nvim"
-clone_plugin "nvim-telescope/telescope.nvim"
-clone_plugin "nvim-treesitter/nvim-treesitter"
-clone_plugin "tpope/vim-fugitive"
-
-# neovim dependencies
-if [ "$system_type" = "Darwin" ]; then
-    python3 -m pip install --user --upgrade pip setuptools wheel pynvim
-    npm install -g neovim diff-so-fancy
-elif command -v dnf >/dev/null 2>&1; then
-    python3 -m pip install --user pynvim
-    sudo npm install -g neovim diff-so-fancy
-else
-    # Use pip for pynvim (avoids apt pulling in old neovim as dependency)
-    python3 -m pip install --break-system-packages --user pynvim
-    sudo npm install -g neovim diff-so-fancy
+# zinit, zsh plugin manager
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
+# pure prompt
+git clone https://github.com/sindresorhus/pure.git "$HOME/.zsh/pure"
+# go
+go get golang.org/x/tools/gopls@latest
+# node
+sudo npm install -g n
+sudo n stable
+# fzf
+if [ -d "~/.fzf" ]; then
+    git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+    # TODO: copy ky beinding from the install script
+    ~/.fzf/install --no-key-bindings --no-completion --no-update-rc --no-bash --no-fish --no-zsh
 fi
+# neovim's plug manager
+if [ ! -f "$HOME/.local/share/nvim/site/autoload/plug.vim" ]; then
+	curl -sfLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs \
+		https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+fi
+curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
+python3 /tmp/get-pip.py
+python3 -m pip install --user neovim
+rm /tmp/get-pip.py
+sudo npm install -g neovim 
+sudo npm install -g how-2
 
-# Configure git to use diff-so-fancy
-git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
-git config --global interactive.diffFilter "diff-so-fancy --patch"
-git config --global color.ui true
-git config --global color.diff-highlight.oldNormal "red bold"
-git config --global color.diff-highlight.oldHighlight "red bold 52"
-git config --global color.diff-highlight.newNormal "green bold"
-git config --global color.diff-highlight.newHighlight "green bold 22"
+curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
 
-# Install treesitter parsers
-nvim --headless -c "lua require('nvim-treesitter').install({'lua', 'vim', 'vimdoc', 'javascript', 'typescript', 'python', 'go', 'bash', 'json', 'yaml', 'markdown'})" -c "sleep 30" -c "qa" 2>/dev/null || true
+# Running neovim to update its plugins
+nvim '+PlugUpdate' '+PlugClean!' '+PlugUpdate' '+GoInstallBinaries' '+qall'
 
-# Bootstrap tmux
+# tmux plugins update
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     mkdir -p "$HOME/.tmux/plugins"
     # installing tmux-plugin-manager and plugins
@@ -204,6 +68,7 @@ else
     cd "$HOME/.tmux/plugins/tpm" || git pull -p
     cd "$HOME" || "$HOME"/.tmux/plugins/tpm/bin/update_plugins all
 fi
+sh -c "$(curl -fsSL https://starship.rs/install.sh)"
 # termino
 tic "$HOME/.terminfo/xterm-256color-italic.terminfo"
 # changing the shell to zsh for interactive sessions only
@@ -211,10 +76,7 @@ case $- in
   *) echo "Running in a script, not changing default shell"
      ;;
   *i*) echo ">>> Please enter you password to make zsh your default shell."
-    chsh -s "$(command -v zsh)" || echo "*** Failed to chsh, please run it manually"
-    ;;
+    chsh -s "$(command -v zsh)" || echo "*** Failed to chsh, please run it manually"  
+    ;;  
 esac
 
-# Clean up non-dotfiles that shouldn't remain in $HOME
-rm -f "$HOME/Dockerfile" "$HOME/Dockerfile.amazonlinux" "$HOME/.dockerignore" "$HOME/README.md" "$HOME/Aptfile" "$HOME/Brewfile" "$HOME/Yumfile"
-rm -rf "$HOME/.github"
